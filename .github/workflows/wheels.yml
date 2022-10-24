@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-12, ubuntu-latest] # windows-latest
+        os: [windows-latest] # [macos-12, ubuntu-latest]
 
     steps:
       # Check out repository using git-lfs
@@ -19,7 +19,7 @@ jobs:
       # Install Python used to run cibuildwheel
       - uses: actions/setup-python@v3
         with:
-          python-version: '3.10'
+          python-version: '3.9'
 
       # Fetch BÍN source data from Árnastofnun
       - name: Fetch BÍN source data and build compressed.bin
@@ -27,13 +27,15 @@ jobs:
           pip3 install -e .
           echo "Fetching BÍN source data..."
           cd src/islenska/resources
-          wget --quiet -O KRISTINsnid.csv.zip https://bin.arnastofnun.is/django/api/nidurhal/?file=KRISTINsnid.csv.zip
-          unzip -q KRISTINsnid.csv.zip
+          curl -o KRISTINsnid.csv.zip 'https://bin.arnastofnun.is/django/api/nidurhal/?file=KRISTINsnid.csv.zip'
+          unzip KRISTINsnid.csv.zip
           rm KRISTINsnid.csv.*
           cd ../../..
-          echo "Building compressed.bin..."
+          echo "Running binpack..."
           python3 tools/binpack.py
+          echo "Running dawgbuilder..."
           python3 tools/dawgbuilder.py
+        shell: bash
 
       - name: Install cibuildwheel
         run: python -m pip install --upgrade wheel setuptools pip cibuildwheel==2.11.1
